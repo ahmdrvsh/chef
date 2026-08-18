@@ -8,22 +8,7 @@ export interface Ingredient {
   name: string;
   category: string;
   defaultUnit: string;
-  allowedUnits?: string[];
   conversions?: IngredientConversion[];
-  conversionText?: string;
-  caloriesPer100g?: number;
-  carbsPer100g?: number;
-  proteinPer100g?: number;
-  fatPer100g?: number;
-  glycemicIndex?: string;
-  fridgeLifeDays?: number;
-  freezerLifeDays?: string | number;
-  pantryLifeDays?: string | number;
-  source?: string;
-  isFreezable?: boolean;
-  diets?: string[];
-  season?: string;
-  substitutes?: string;
 }
 
 export interface RecipeIngredient {
@@ -120,195 +105,21 @@ export interface MealPlanDay {
   servingsMap?: Record<string, number>; // Recipe ID or title -> number of servings
 }
 
-// Unified Category List and Groups for all pages
-export interface SubCategoryItem {
-  id: string;
-  title: string;
-  image: string;
-  matchKeyword: string;
-}
-
-export interface CategoryGroup {
-  id: string;
-  title: string;
-  iconName: string;
-  items: SubCategoryItem[];
-}
-
-export const CATEGORY_GROUPS: CategoryGroup[] = [
-  {
-    id: 'main-dishes',
-    title: 'غذاهای اصلی (Main Dishes)',
-    iconName: 'utensils',
-    items: [
-      {
-        id: 'iranian',
-        title: 'غذای ایرانی',
-        image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&auto=format&fit=crop&q=80',
-        matchKeyword: 'غذای ایرانی'
-      },
-      {
-        id: 'local',
-        title: 'غذاهای محلی',
-        image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'غذاهای محلی'
-      },
-      {
-        id: 'soup',
-        title: 'سوپ',
-        image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'سوپ'
-      },
-      {
-        id: 'ash',
-        title: 'آش',
-        image: 'https://images.unsplash.com/photo-1604152135912-04a022e23696?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'آش'
-      },
-      {
-        id: 'khorak',
-        title: 'خوراک',
-        image: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'خوراک'
-      },
-      {
-        id: 'fastfood',
-        title: 'فست‌فود',
-        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'فست‌فود'
-      },
-      {
-        id: 'baby-food',
-        title: 'غذای کودک',
-        image: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'غذای کودک'
-      }
-    ]
-  },
-  {
-    id: 'appetizers-salads',
-    title: 'پیش‌غذا و سالاد (Appetizers & Salads)',
-    iconName: 'salad',
-    items: [
-      {
-        id: 'salads',
-        title: 'سالادها',
-        image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'سالاد'
-      },
-      {
-        id: 'appetizers',
-        title: 'پیش‌غذاها',
-        image: 'https://images.unsplash.com/photo-1541014741259-de529411b96a?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'پیش‌غذا'
-      },
-      {
-        id: 'quick-meals',
-        title: 'حاضری‌ها',
-        image: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'حاضری'
-      }
-    ]
-  },
-  {
-    id: 'international',
-    title: 'غذای ملل (International)',
-    iconName: 'globe',
-    items: [
-      {
-        id: 'italian',
-        title: 'ایتالیایی',
-        image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'ایتالیایی'
-      },
-      {
-        id: 'korean',
-        title: 'کره‌ای',
-        image: 'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'کره‌ای'
-      },
-      {
-        id: 'greek',
-        title: 'یونانی',
-        image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'یونانی'
-      },
-      {
-        id: 'turkish',
-        title: 'ترکیه‌ای',
-        image: 'https://images.unsplash.com/photo-1529042410759-befb1204b468?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'ترکیه‌ای'
-      }
-    ]
-  },
-  {
-    id: 'desserts',
-    title: 'دسر و شیرینی (Desserts)',
-    iconName: 'cake',
-    items: [
-      {
-        id: 'pastries',
-        title: 'شیرینی‌ها',
-        image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'شیرینی'
-      },
-      {
-        id: 'desserts-sub',
-        title: 'دسرها',
-        image: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'دسر'
-      },
-      {
-        id: 'jam-sharbat',
-        title: 'مربا و شربت‌ها',
-        image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'مربا و شربت'
-      }
-    ]
-  },
-  {
-    id: 'drinks',
-    title: 'نوشیدنی (Drinks)',
-    iconName: 'coffee',
-    items: [
-      {
-        id: 'hot-drinks',
-        title: 'نوشیدنی‌های گرم',
-        image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'نوشیدنی گرم'
-      },
-      {
-        id: 'cold-drinks',
-        title: 'نوشیدنی‌های سرد',
-        image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'نوشیدنی سرد'
-      }
-    ]
-  },
-  {
-    id: 'pickles-preserves',
-    title: 'ترشی و مربا (Pickles & Preserves)',
-    iconName: 'layers',
-    items: [
-      {
-        id: 'pickles',
-        title: 'ترشی‌ها',
-        image: 'https://images.unsplash.com/photo-1589135233689-d56d7870940a?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'ترشی'
-      },
-      {
-        id: 'jams',
-        title: 'مرباها',
-        image: 'https://images.unsplash.com/photo-1589733955941-5eeaf752f6dd?w=500&auto=format&fit=crop&q=80',
-        matchKeyword: 'مربا'
-      }
-    ]
-  }
-];
-
+// Unified Category List for all pages
 export const CATEGORIES = [
   'همه',
-  ...CATEGORY_GROUPS.flatMap(g => g.items.map(i => i.title))
+  'خورشت',
+  'پلو و چلو',
+  'سوپ، آش و خوراک',
+  'کوکو، کتلت و شامی',
+  'غذای ایرانی',
+  'غذاهای محلی و سنتی',
+  'فست‌فود و ساندویچ',
+  'پیش‌غذا و سالاد',
+  'دسر و شیرینی',
+  'نوشیدنی',
+  'ترشی و مربا',
+  'غذای ملل'
 ];
 
 export const MEAL_TYPES = [
@@ -960,8 +771,6 @@ export const INITIAL_FRIDGE: FridgeItem[] = [
   { id: 'f4', name: 'سیب زمینی', quantity: 3, unit: 'عدد', category: 'سبزیجات و صیفی‌جات', location: 'کابینت' },
   { id: 'f5', name: 'تخم مرغ', quantity: 6, unit: 'عدد', category: 'لبنیات', expiryDate: '2026-08-04', location: 'یخچال' },
   { id: 'f6', name: 'مرغ (سینه یا ران)', quantity: 500, unit: 'گرم', category: 'گوشت و مرغ و ماهی', expiryDate: '2026-08-06', location: 'یخچال' },
-  { id: 'f9', name: 'گوشت گوسفندی', quantity: 400, unit: 'گرم', category: 'گوشت و مرغ و ماهی', location: 'یخچال' },
-  { id: 'f10', name: 'روغن', quantity: 1, unit: 'پیمانه', category: 'روغن و چاشنی', location: 'کابینت' },
   { id: 'f7', name: 'بادمجان', quantity: 4, unit: 'عدد', category: 'سبزیجات و صیفی‌جات', location: 'یخچال' },
   { id: 'f8', name: 'قارچ', quantity: 200, unit: 'گرم', category: 'سبزیجات و صیفی‌جات', expiryDate: '2026-08-07', location: 'یخچال' }
 ];

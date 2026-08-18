@@ -162,11 +162,11 @@ async function startServer() {
   }
 
   let chefSettingsData: any = {
-    name: 'محیا',
-    title: 'سرآشپز سفره',
-    message: 'من محیا هستم و میخوام تو آشپزی بهتون کمک کنم.',
-    image: '/mahya.jpg',
-    instagram: 'maahyas.homechef',
+    name: 'سفره',
+    title: 'دستیار هوشمند آشپزی',
+    message: 'دستیار هوشمند آشپزی سفره آماده همراهی و راهنمایی شما در انتخاب و پخت غذا است.',
+    image: '/logo.png',
+    instagram: 'sofreh.app',
     bio: 'سفره بر اساس موادی که در یخچال خانه دارید، بهترین دستورات پخت اصیل و خوش‌طعم را پیشنهاد می‌دهد.'
   };
 
@@ -854,6 +854,236 @@ async function startServer() {
     saveData();
     res.status(201).json(entry);
   });
+
+  // ==========================================
+  // GapGPT AI Voice Assistant Endpoint
+  // ==========================================
+  app.post('/api/ai/voice-assistant', async (req, res) => {
+    try {
+      const {
+        message = '',
+        fridgeItems = [],
+        preferences = {},
+        currentMealType = ''
+      } = req.body || {};
+
+      const promptText = (typeof message === 'string' ? message : '').trim();
+      if (!promptText) {
+        return res.status(400).json({ error: 'پیام صوتی یا متنی کاربر خالی است.' });
+      }
+
+      // Collect context
+      const fridgeListStr = Array.isArray(fridgeItems) && fridgeItems.length > 0
+        ? fridgeItems.map((item: any) => `${item.name} (${item.quantity || 1} ${item.unit || 'عدد'})`).join('، ')
+        : 'یخچال کاربر خالی است یا ثبت نشده';
+
+      const dietStr = preferences?.diet || 'معمولی';
+      const allergiesList = Array.isArray(preferences?.allergies) ? preferences.allergies.join('، ') : 'بدون حساسیت خاص';
+      const dislikedList = Array.isArray(preferences?.dislikedIngredients) ? preferences.dislikedIngredients.join('، ') : 'ندارد';
+      const servingCount = preferences?.servingDefault || 4;
+
+      const gapGptKey = process.env.GAPGPT_API_KEY || process.env.OPENAI_API_KEY;
+      const gapGptBaseUrl = process.env.GAPGPT_BASE_URL || 'https://api.gapgpt.app/v1';
+      const gapGptModel = process.env.GAPGPT_MODEL || 'gpt-4o-mini';
+
+      let aiResult: any = null;
+
+      // Try GapGPT if API key is provided
+      if (gapGptKey) {
+        try {
+          const systemPrompt = `شما «سرآشپز هوشمند و دستیار صوتی اپلیکیشن سفره» هستید. 
+وظیفه شما این است که به درخواست صوتی یا متنی کاربر با زبان فارسی روان، صمیمی، محترمانه و تخصصی پاسخ دهید.
+اطلاعات موجودی و ترجیحات کاربر:
+- موجودی فعلی یخچال کاربر: ${fridgeListStr}
+- نوع رژیم غذایی: ${dietStr}
+- حساسیت‌های غذایی (اکیداً از این موارد پرهیز شود): ${allergiesList}
+- مواد غذایی نامحبوب: ${dislikedList}
+- تعداد نفرات پیش‌فرض: ${servingCount} نفر
+- وعده غذایی مورد نظر: ${currentMealType || 'تعیین‌نشده'}
+
+شما باید دقیقاً ۳ پیشنهاد غذایی متنوع، متناسب با موجودی یخچال و مناسب ذائقه ایرانی ارائه دهید.
+پاسخ شما باید صرفاً یک آبجکت JSON معتبر بدون متن اضافی باشد به این فرمت:
+{
+  "replyMessage": "پاسخ صوتی و متنی دوستانه و دلگرم‌کننده سرآشپز (۲ تا ۳ جمله که برای خوانده شدن با صدای هوش مصنوعی Text-to-Speech مناسب باشد)",
+  "suggestions": [
+    {
+      "title": "نام فارسی غذا (مثلاً زرشک‌پلو با مرغ)",
+      "description": "توضیح کوتاه و جذاب در مورد غذا و هماهنگی آن با مواد یخچال",
+      "category": "دسته‌بندی غذا (پلو و چلو، خورشت، سوپ و آش، کوکو و کتلت، فست‌فود و...)",
+      "prepTime": 15,
+      "cookTime": 45,
+      "difficulty": "آسان",
+      "matchPercentage": 85,
+      "neededFromFridge": ["مرغ", "برنج", "پیاز"],
+      "missingIngredients": ["زرشک", "زعفران"],
+      "instructionsSummary": "خلاصه مراحل تهیه در ۲ الی ۳ مرحله کوتاه و شفاف",
+      "caloriesPerServing": 420
+    }
+  ]
+}`;
+
+          const response = await fetch(`${gapGptBaseUrl.replace(/\/$/, '')}/chat/completions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${gapGptKey}`
+            },
+            body: JSON.stringify({
+              model: gapGptModel,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: promptText }
+              ],
+              temperature: 0.7
+            })
+          });
+
+          if (response.ok) {
+            const data: any = await response.json();
+            const content = data?.choices?.[0]?.message?.content;
+            if (content) {
+              const cleanJson = content.replace(/```json/gi, '').replace(/```/g, '').trim();
+              const parsed = JSON.parse(cleanJson);
+              if (parsed && Array.isArray(parsed.suggestions) && parsed.suggestions.length > 0) {
+                aiResult = {
+                  source: 'gapgpt',
+                  model: gapGptModel,
+                  replyMessage: parsed.replyMessage || 'سلام! با توجه به مواد موجود در یخچالتان، این ۳ پیشنهاد خوشمزه را برای شما آماده کردم:',
+                  suggestions: parsed.suggestions.slice(0, 3)
+                };
+              }
+            }
+          } else {
+            console.warn('[GapGPT] API response status:', response.status, await response.text());
+          }
+        } catch (gptErr) {
+          console.warn('[GapGPT] Error calling service:', gptErr);
+        }
+      }
+
+      // Intelligent Culinary Engine Fallback (if GapGPT key is missing or request failed)
+      if (!aiResult) {
+        aiResult = generateSmartCulinaryResponse(promptText, fridgeItems, preferences, recipesData);
+      }
+
+      res.json(aiResult);
+    } catch (err: any) {
+      console.error('[VoiceAssistant] Fatal handler error:', err);
+      res.status(500).json({
+        error: 'خطا در پردازش درخواست دستیار صوتی',
+        details: err?.message
+      });
+    }
+  });
+
+  app.get('/api/ai/status', (req, res) => {
+    const hasKey = Boolean(process.env.GAPGPT_API_KEY || process.env.OPENAI_API_KEY);
+    res.json({
+      enabled: hasKey,
+      provider: hasKey ? 'GapGPT (فعال)' : 'موتور هوشمند محلی سفره (آماده اتصال به GapGPT)',
+      model: process.env.GAPGPT_MODEL || 'gpt-4o-mini'
+    });
+  });
+
+  // Helper function for smart local culinary scoring & speech formulation
+  function generateSmartCulinaryResponse(
+    prompt: string,
+    fridgeItems: any[],
+    preferences: any,
+    catalog: Recipe[]
+  ) {
+    const promptLower = prompt.toLowerCase();
+    const fridgeNames = fridgeItems.map(i => (i.name || '').toLowerCase());
+    
+    // Extract keywords from prompt
+    const mentionedIngredients = fridgeNames.filter(name => name && promptLower.includes(name));
+    
+    // Score all catalog recipes
+    const scored = catalog.map(recipe => {
+      let score = 0;
+      const neededFromFridge: string[] = [];
+      const missingIngredients: string[] = [];
+
+      recipe.ingredients.forEach(ing => {
+        const ingName = (ing.name || '').toLowerCase();
+        const isInFridge = fridgeNames.some(fn => fn.includes(ingName) || ingName.includes(fn));
+        if (isInFridge) {
+          score += 15;
+          neededFromFridge.push(ing.name);
+        } else {
+          missingIngredients.push(ing.name);
+        }
+      });
+
+      // Bonus if prompt mentions recipe title or ingredients
+      if (promptLower.includes((recipe.title || '').toLowerCase())) {
+        score += 40;
+      }
+      if (promptLower.includes((recipe.category || '').toLowerCase())) {
+        score += 20;
+      }
+
+      // Preference matching
+      if (preferences?.diet && preferences.diet !== 'همه' && preferences.diet !== 'معمولی') {
+        const diet = (recipe.diet || '').toLowerCase();
+        if (diet.includes(preferences.diet.toLowerCase())) {
+          score += 15;
+        }
+      }
+
+      // Check allergies penalty
+      if (Array.isArray(preferences?.allergies) && preferences.allergies.length > 0) {
+        const hasAllergy = recipe.ingredients.some(ing => 
+          preferences.allergies.some((a: string) => (ing.name || '').includes(a))
+        );
+        if (hasAllergy) {
+          score -= 100;
+        }
+      }
+
+      const matchPct = recipe.ingredients.length > 0
+        ? Math.min(100, Math.round((neededFromFridge.length / recipe.ingredients.length) * 100))
+        : 50;
+
+      return {
+        id: recipe.id,
+        title: recipe.title,
+        description: recipe.description || `یک غذای خوش‌طعم و اصیل با ${neededFromFridge.slice(0, 2).join(' و ')}`,
+        category: recipe.category || 'غذای اصلی',
+        prepTime: recipe.prepTime || 15,
+        cookTime: recipe.cookTime || 35,
+        difficulty: recipe.difficulty || 'متوسط',
+        matchPercentage: matchPct,
+        neededFromFridge: neededFromFridge.length > 0 ? neededFromFridge : (recipe.ingredients.slice(0, 3).map(i => i.name)),
+        missingIngredients: missingIngredients.slice(0, 4),
+        instructionsSummary: Array.isArray(recipe.instructions)
+          ? recipe.instructions.slice(0, 3).join(' ')
+          : 'مواد را تفت داده و پس از پخت با چاشنی دلخواه سرو نمایید.',
+        caloriesPerServing: recipe.calories || 380,
+        score
+      };
+    });
+
+    // Sort by score and pick top 3
+    scored.sort((a, b) => b.score - a.score);
+    const top3 = scored.slice(0, 3);
+
+    // Formulate pleasant conversational Persian response for Text-To-Speech (TTS)
+    let replyMessage = '';
+    if (top3.length > 0) {
+      const topTitle = top3[0].title;
+      const topPct = top3[0].matchPercentage;
+      replyMessage = `سلام! بر اساس درخواست شما و موجودی یخچالتان، پیشنهاد اول من «${topTitle}» با تطابق ${topPct} درصدی است. همچنین «${top3[1]?.title || 'یک گزینه عالی دیگر'}» و «${top3[2]?.title || 'یک پیشنهاد جذاب'}» هم برای پخت آماده هستند. نوش جان!`;
+    } else {
+      replyMessage = 'سلام! بر اساس صحبت‌های شما و مواد موجود در یخچال، این ۳ پیشنهاد را برای شما انتخاب کردم:';
+    }
+
+    return {
+      source: 'culinary_engine',
+      replyMessage,
+      suggestions: top3
+    };
+  }
 
   app.get('/api/analytics/summary', (req, res) => {
     // Top Shopping Items Calculation

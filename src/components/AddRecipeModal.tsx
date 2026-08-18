@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Plus, Trash2, Check, ChefHat, Info, Utensils, Clock, Salad, Image as ImageIcon, Video, Upload, Link as LinkIcon } from 'lucide-react';
-import { Recipe, RecipeIngredient, CATEGORIES, MEAL_TYPES, DIET_TYPES, COMMON_UNITS, Ingredient } from '../data/initialData';
+import { Recipe, RecipeIngredient, CATEGORIES, MEAL_TYPES, DIET_TYPES, COMMON_UNITS } from '../data/initialData';
 import { IngredientInput } from './IngredientInput';
-import { addRecipe, fetchIngredients } from '../db';
-import { getValidUnitsForIngredient } from '../utils/unitConverter';
+import { addRecipe } from '../db';
 import { useAuth } from '../context/AuthContext';
 
 interface AddRecipeModalProps {
@@ -39,11 +38,6 @@ export const AddRecipeModal: React.FC<AddRecipeModalProps> = ({ isOpen, onClose,
   ]);
 
   const [tips, setTips] = useState('');
-  const [allIngredients, setAllIngredients] = useState<Ingredient[]>([]);
-
-  useEffect(() => {
-    fetchIngredients().then(setAllIngredients);
-  }, []);
 
   if (!isOpen) return null;
 
@@ -123,8 +117,8 @@ export const AddRecipeModal: React.FC<AddRecipeModalProps> = ({ isOpen, onClose,
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-stone-900/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden sm:overflow-y-auto">
-      <div className="bg-white rounded-t-[32px] rounded-b-none sm:rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-stone-200/90 overflow-hidden relative animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[100] bg-stone-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-stone-200/90 overflow-hidden relative">
         {/* Header */}
         <div className="p-5 sm:p-6 border-b border-stone-100 flex items-center justify-between shrink-0 bg-stone-50/50">
           <div className="flex items-center gap-3">
@@ -378,7 +372,7 @@ export const AddRecipeModal: React.FC<AddRecipeModalProps> = ({ isOpen, onClose,
               {/* Live Image Preview */}
               {image && (
                 <div className="relative w-full h-40 rounded-2xl overflow-hidden border border-stone-200 bg-stone-100 mt-2">
-                  <img loading="lazy" decoding="async" fetchpriority="low" src={image} alt="پیش‌نمایش عکس" className="w-full h-full object-cover" />
+                  <img src={image} alt="پیش‌نمایش عکس" className="w-full h-full object-cover" />
                   <button
                     type="button"
                     onClick={() => setImage('')}
@@ -456,9 +450,9 @@ export const AddRecipeModal: React.FC<AddRecipeModalProps> = ({ isOpen, onClose,
                       updated[idx].unit = e.target.value;
                       setIngredients(updated);
                     }}
-                    className="w-28 p-2 bg-stone-50 border border-stone-200 rounded-lg font-medium text-xs"
+                    className="w-28 p-2 bg-stone-50 border border-stone-200 rounded-lg font-medium"
                   >
-                    {getValidUnitsForIngredient(ing.name, allIngredients).map(u => (
+                    {COMMON_UNITS.map(u => (
                       <option key={u} value={u}>{u}</option>
                     ))}
                   </select>

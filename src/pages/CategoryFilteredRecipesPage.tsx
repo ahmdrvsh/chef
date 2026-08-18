@@ -307,15 +307,15 @@ export const CategoryFilteredRecipesPage: React.FC = () => {
               <span className="text-[11px] font-bold text-stone-500 px-2">زمان:</span>
               {TIME_FILTERS.map(tf => (
                 <button
-                  key={tf}
-                  onClick={() => setSelectedTime(tf)}
+                  key={tf.id}
+                  onClick={() => setSelectedTime(tf.id)}
                   className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                    selectedTime === tf
+                    selectedTime === tf.id
                       ? 'bg-emerald-700 text-white shadow-xs'
                       : 'text-stone-600 hover:bg-stone-200/60'
                   }`}
                 >
-                  {tf}
+                  {tf.name}
                 </button>
               ))}
             </div>
@@ -323,7 +323,7 @@ export const CategoryFilteredRecipesPage: React.FC = () => {
             {/* Difficulty */}
             <div className="flex items-center gap-1 bg-stone-50 p-1 rounded-xl border border-stone-200/80">
               <span className="text-[11px] font-bold text-stone-500 px-2">سختی:</span>
-              {DIFFICULTIES.map(diff => (
+              {['همه', ...DIFFICULTIES].map(diff => (
                 <button
                   key={diff}
                   onClick={() => setSelectedDifficulty(diff)}
@@ -379,7 +379,7 @@ export const CategoryFilteredRecipesPage: React.FC = () => {
                   <div>
                     {/* Food Image */}
                     <div className="relative h-32 sm:h-52 overflow-hidden bg-stone-100">
-                      <ImageWithFallback loading="lazy" decoding="async" fetchpriority="low"
+                      <ImageWithFallback
                         src={recipe.image}
                         alt={recipe.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

@@ -41,7 +41,7 @@ import {
   Tag
 } from 'lucide-react';
 import { Recipe, Ingredient, IngredientConversion, CATEGORIES, INGREDIENT_CATEGORIES, COMMON_UNITS, isCategoryMatch } from '../data/initialData';
-import { fetchRecipes, fetchIngredients, deleteRecipe, addRecipe, addIngredient, deleteIngredient, updateRecipe, updateIngredient, fetchChefSettings, getChefSettings, saveChefSettings, ChefSettings, fetchAnalyticsSummary } from '../db';
+import { fetchRecipes, fetchIngredients, deleteRecipe, addRecipe, addIngredient, deleteIngredient, updateRecipe, updateIngredient, fetchAnalyticsSummary } from '../db';
 import { AddRecipeModal } from '../components/AddRecipeModal';
 import { BatchImportRecipeModal } from '../components/BatchImportRecipeModal';
 import { EditRecipeModal } from '../components/EditRecipeModal';
@@ -113,37 +113,10 @@ export const AdminPage: React.FC = () => {
     showToast(`تعداد ${addedCount} دستور پخت جدید با موفقیت اضافه شد.`);
   };
 
-  // Chef Profile Settings State
-  const [chefSettings, setChefSettings] = useState<ChefSettings>(getChefSettings());
-  const [chefImageMode, setChefImageMode] = useState<'file' | 'url'>('url');
-
   useEffect(() => {
     loadData();
     syncUsersFromServer();
-    fetchChefSettings().then(setChefSettings);
   }, []);
-
-  const handleSaveChefSettings = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await saveChefSettings(chefSettings);
-    showToast('اطلاعات و عکس سرآشپز سفره با موفقیت بروزرسانی و برای همه حساب‌ها ذخیره شد.');
-  };
-
-  const handleChefImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('حجم فایل تصویر بالاست؛ لطفاً عکس کم‌حجم‌تری انتخاب کنید.');
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          setChefSettings(prev => ({ ...prev, image: reader.result as string }));
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const loadData = async () => {
     const [rData, iData] = await Promise.all([fetchRecipes(), fetchIngredients()]);

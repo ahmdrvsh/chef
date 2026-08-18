@@ -2,6 +2,15 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { isValidIranianMobile } from '../utils/authUtils';
 import { fetchFridge, fetchShoppingList, fetchMealPlan } from '../db';
 
+export interface UserPreferences {
+  diet?: string;
+  allergies?: string[];
+  dislikedIngredients?: string[];
+  favoriteCuisines?: string[];
+  servingDefault?: number;
+  aiAssistantTone?: 'friendly' | 'chef' | 'concise';
+}
+
 export interface User {
   id: string;
   name: string;
@@ -12,6 +21,7 @@ export interface User {
   registeredPhone?: string;
   registeredEmail?: string;
   isAdmin: boolean;
+  preferences?: UserPreferences;
   createdAt?: string;
 }
 
@@ -25,6 +35,7 @@ export interface StoredUser {
   registeredPhone?: string;
   registeredEmail?: string;
   isAdmin: boolean;
+  preferences?: UserPreferences;
   createdAt: string;
 }
 

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { User as UserIcon, ChefHat, Settings, LogOut, Check, Users, ShieldCheck, ArrowLeft, ShoppingBag, Calendar, History, Clock, Lock, Info, MapPin, Mail, Phone, Heart, Headphones, MessageSquare, Send, Trash2, Star, Instagram } from 'lucide-react';
+import { User as UserIcon, ChefHat, Settings, LogOut, Check, Users, ShieldCheck, ArrowLeft, ShoppingBag, Calendar, History, Clock, Lock, Info, MapPin, Mail, Phone, Heart, Headphones, MessageSquare, Send, Trash2, Star, Instagram, Sparkles, Salad, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { getFamilyMembersCount, setFamilyMembersCount } from '../utils/userSettings';
 import { fetchUserShoppingHistory, fetchUserMealHistory, fetchRecipes, ShoppingHistoryLog, MealPlanHistoryLog } from '../db';
-import { Recipe } from '../data/initialData';
+import { Recipe, DIET_TYPES } from '../data/initialData';
 import { ImageWithFallback } from '../components/ImageWithFallback';
 import { openExternalLink } from '../lib/capacitor';
 
@@ -16,6 +16,12 @@ export const ProfilePage: React.FC = () => {
   const [birthDate, setBirthDate] = useState(user?.birthDate || '');
   const [city, setCity] = useState(user?.city || '');
   const [familyMembers, setFamilyMembers] = useState(getFamilyMembersCount());
+  
+  // Dietary Preferences & AI assistant fields
+  const [diet, setDiet] = useState(user?.preferences?.diet || 'معمولی');
+  const [allergies, setAllergies] = useState<string[]>(user?.preferences?.allergies || []);
+  const [dislikedIngredients, setDislikedIngredients] = useState<string[]>(user?.preferences?.dislikedIngredients || []);
+  const [dislikedInput, setDislikedInput] = useState('');
   const [saved, setSaved] = useState(false);
 
   const [activeProfileTab, setActiveProfileTab] = useState<'settings' | 'favorites' | 'shopping_history' | 'meal_history' | 'contact'>('settings');
@@ -44,6 +50,11 @@ export const ProfilePage: React.FC = () => {
       setPhone(user.phone || '');
       setBirthDate(user.birthDate || '');
       setCity(user.city || '');
+      if (user.preferences) {
+        setDiet(user.preferences.diet || 'معمولی');
+        setAllergies(user.preferences.allergies || []);
+        setDislikedIngredients(user.preferences.dislikedIngredients || []);
+      }
     }
   }, [user]);
 
@@ -88,6 +99,24 @@ export const ProfilePage: React.FC = () => {
     }, 3500);
   };
 
+  const toggleAllergy = (item: string) => {
+    setAllergies(prev =>
+      prev.includes(item) ? prev.filter(a => a !== item) : [...prev, item]
+    );
+  };
+
+  const addDislikedIngredient = () => {
+    const trimmed = dislikedInput.trim();
+    if (trimmed && !dislikedIngredients.includes(trimmed)) {
+      setDislikedIngredients(prev => [...prev, trimmed]);
+      setDislikedInput('');
+    }
+  };
+
+  const removeDislikedIngredient = (item: string) => {
+    setDislikedIngredients(prev => prev.filter(i => i !== item));
+  };
+
   // Determine if phone or email was provided during registration
   const isPhoneLocked = Boolean(user?.registeredPhone || (user?.phone && user.phone.trim().length > 0));
   const isEmailLocked = Boolean(user?.registeredEmail && user.registeredEmail.trim().length > 0);
@@ -100,6 +129,12 @@ export const ProfilePage: React.FC = () => {
       if (!isPhoneLocked) updates.phone = phone.trim();
       updates.birthDate = birthDate.trim();
       updates.city = city.trim();
+      updates.preferences = {
+        diet,
+        allergies,
+        dislikedIngredients,
+        servingDefault: familyMembers
+      };
 
       await updateUserInList(user.id, updates);
     }
@@ -396,6 +431,129 @@ export const ProfilePage: React.FC = () => {
                 className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 text-stone-800 rounded-xl focus:bg-white focus:outline-none focus:border-emerald-600 text-xs font-bold"
               />
               <p className="text-[11px] text-stone-400 mt-1">جهت محاسبه میزان مواد اولیه دستورات پخت</p>
+            </div>
+          </div>
+
+          {/* ================= Dietary & AI Assistant Settings ================= */}
+          <div className="pt-4 border-t border-stone-100 space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-black text-stone-800 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-emerald-600" />
+                <span>شخصی‌سازی رژیم غذایی و دستیار صوتی (GapGPT)</span>
+              </h4>
+              <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                هوشمندسازی پیشنهادها
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-medium">
+              {/* Diet selection */}
+              <div className="space-y-1.5">
+                <label className="block text-stone-700 font-bold flex items-center gap-1.5">
+                  <Salad className="w-3.5 h-3.5 text-emerald-600" />
+                  نوع رژیم غذایی اصلی
+                </label>
+                <select
+                  value={diet}
+                  onChange={e => setDiet(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 text-stone-800 rounded-xl focus:bg-white focus:outline-none focus:border-emerald-600 text-xs font-bold"
+                >
+                  <option value="معمولی">معمولی و همه‌چیزخوار</option>
+                  <option value="گیاه‌خواری (Vegetarian)">گیاه‌خواری (Vegetarian)</option>
+                  <option value="وگان (Vegan)">وگان (Vegan)</option>
+                  <option value="کم‌کالری و رژیمی">کم‌کالری و رژیمی (کاهش وزن)</option>
+                  <option value="پرپروتئین و ورزشی">پرپروتئین و ورزشی (عضله‌سازی)</option>
+                  <option value="کتوژنیک">کتوژنیک (کم‌کربوهیدرات)</option>
+                  <option value="دیابتی">مناسب افراد دیابتی</option>
+                </select>
+                <p className="text-[11px] text-stone-400">دستیار صوتی و موتور هوش مصنوعی پیشنهادها را با این رژیم تطبیق می‌دهند.</p>
+              </div>
+
+              {/* Allergies checkboxes */}
+              <div className="space-y-1.5">
+                <label className="block text-stone-700 font-bold flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                  حساسیت‌های غذایی (اکیداً پیشنهاد نشود)
+                </label>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {[
+                    'بادمجان',
+                    'قارچ',
+                    'بادام زمینی و مغزها',
+                    'لبنیات و لاکتوز',
+                    'گلوتن',
+                    'تخم‌مرغ',
+                    'غذاهای دریایی',
+                    'سیر و پیاز تند'
+                  ].map((allergyItem) => {
+                    const isSelected = allergies.includes(allergyItem);
+                    return (
+                      <button
+                        key={allergyItem}
+                        type="button"
+                        onClick={() => toggleAllergy(allergyItem)}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-rose-100 text-rose-800 border-rose-300 shadow-xs'
+                            : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100'
+                        }`}
+                      >
+                        {isSelected ? '✕ ' : '+ '}
+                        {allergyItem}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Disliked Ingredients */}
+            <div className="space-y-1.5">
+              <label className="block text-stone-700 font-bold text-xs">
+                مواد غذایی نامحبوب (ترجیحاً در دستورات نیاید)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={dislikedInput}
+                  onChange={e => setDislikedInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addDislikedIngredient();
+                    }
+                  }}
+                  placeholder="مثال: کلم بروکلی، کرفس، فلفل دلمه‌ای..."
+                  className="flex-1 px-4 py-2 bg-stone-50 border border-stone-200 text-stone-800 rounded-xl focus:bg-white focus:outline-none focus:border-emerald-600 text-xs font-bold"
+                />
+                <button
+                  type="button"
+                  onClick={addDislikedIngredient}
+                  className="px-4 py-2 bg-stone-800 hover:bg-stone-900 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
+                >
+                  افزودن
+                </button>
+              </div>
+
+              {dislikedIngredients.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1.5">
+                  {dislikedIngredients.map((item, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-200 rounded-lg text-xs font-medium"
+                    >
+                      <span>{item}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeDislikedIngredient(item)}
+                        className="text-amber-700 hover:text-rose-600 font-black cursor-pointer text-sm leading-none"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

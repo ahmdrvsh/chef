@@ -197,8 +197,8 @@ export const BatchImportRecipeModal: React.FC<BatchImportRecipeModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-stone-900/70 backdrop-blur-xs p-0 sm:p-4 overflow-hidden sm:overflow-y-auto">
-      <div className="bg-white rounded-t-[32px] rounded-b-none sm:rounded-3xl max-w-4xl w-full shadow-2xl border border-stone-100 overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-stone-900/70 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-3xl max-w-4xl w-full shadow-2xl border border-stone-100 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-6 py-4 bg-stone-900 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">

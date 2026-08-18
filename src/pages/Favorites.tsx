@@ -63,7 +63,7 @@ export const FavoritesPage: React.FC = () => {
               className="group bg-white rounded-3xl overflow-hidden border border-stone-200/90 hover:border-emerald-500 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer"
             >
               <div className="relative h-48 overflow-hidden bg-stone-100">
-                <ImageWithFallback loading="lazy" decoding="async" fetchpriority="low"
+                <ImageWithFallback
                   src={recipe.image}
                   alt={recipe.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

@@ -23,7 +23,6 @@ import {
   Search
 } from 'lucide-react';
 import { ShoppingItem, Ingredient, FridgeItem, COMMON_UNITS } from '../data/initialData';
-import { openExternalLink } from '../lib/capacitor';
 import { fetchShoppingList, saveShoppingList, fetchIngredients, fetchFridge, syncPendingData, addToFridge, logShoppingHistory } from '../db';
 import { IngredientInput } from '../components/IngredientInput';
 import {
@@ -142,7 +141,7 @@ export const ShoppingListPage: React.FC = () => {
     const newItem: ShoppingItem = {
       id: 'shop_' + Date.now(),
       name: newItemName.trim(),
-      quantity: newItemQuantity.trim(),
+      quantity: `${newItemQuantity} ${newItemUnit}`,
       unit: newItemUnit,
       category: newItemCategory,
       isBought: false,
@@ -181,14 +180,14 @@ export const ShoppingListPage: React.FC = () => {
     const matchedIng = ingredients.find(i => i.name.trim() === item.name.trim());
     const defaultUnit = matchedIng?.defaultUnit || item.unit;
 
-    const convertedVal = convertUnitValue(currentNumeric, item.unit, targetUnit, conversions, defaultUnit, item.name);
+    const convertedVal = convertUnitValue(currentNumeric, item.unit, targetUnit, conversions, defaultUnit);
 
     const updated = shoppingItems.map(i => {
       if (i.id === item.id) {
         return {
           ...i,
           unit: targetUnit,
-          quantity: convertedVal
+          quantity: `${convertedVal} ${targetUnit}`
         };
       }
       return i;
@@ -616,22 +615,19 @@ export const ShoppingListPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Right column action buttons */}
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {/* ONLINE SHOPPING BUTTON */}
-                      {!item.isBought && (
-                        <button
-                          type="button"
-                          onClick={(e) => { e.preventDefault(); openExternalLink(`https://snapp.market/shopping-list/general-search?query=${encodeURIComponent(item.name)}`); }}
-                          className="w-11 h-11 min-w-[44px] min-h-[44px] text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl transition-all flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
-                          title="خرید آنلاین"
-                          aria-label="خرید آنلاین"
-                        >
-                          <Store className="w-4 h-4 text-purple-700" />
-                        </button>
-                      )}
+                    {/* Right column: 44px Delete Button + 44px Unit Conversion Button directly below it */}
+                    <div className="flex flex-col items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteItem(item.id)}
+                        className="w-11 h-11 min-w-[44px] min-h-[44px] text-stone-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 transition-colors flex items-center justify-center cursor-pointer active:scale-95"
+                        title="حذف"
+                        aria-label="حذف کالا"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
 
-                      {/* UNIT CONVERSION BUTTON (44px target) */}
+                      {/* UNIT CONVERSION BUTTON BELOW TRASH BUTTON (44px target) */}
                       <div className="relative">
                         <button
                           type="button"
@@ -671,18 +667,24 @@ export const ShoppingListPage: React.FC = () => {
                           </div>
                         )}
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteItem(item.id)}
-                        className="w-11 h-11 min-w-[44px] min-h-[44px] text-stone-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 transition-colors flex items-center justify-center cursor-pointer active:scale-95"
-                        title="حذف"
-                        aria-label="حذف کالا"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
                     </div>
                   </div>
+
+                  {!item.isBought && (
+                    <div className="pt-2 border-t border-stone-100 flex items-center justify-between gap-1">
+                      <a
+                        href={`https://snapp.market/shopping-list/general-search?query=${encodeURIComponent(item.name)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full text-[10px] sm:text-xs font-extrabold text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs active:scale-98 truncate min-h-[44px]"
+                        title={`خرید ${item.name} در اسنپ مارکت`}
+                      >
+                        <Store className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                        <span className="truncate">خرید از اسنپ‌مارکت</span>
+                        <ExternalLink className="w-2.5 h-2.5 text-purple-400 shrink-0" />
+                      </a>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -783,8 +785,8 @@ export const ShoppingListPage: React.FC = () => {
 
       {/* SHARE MODAL */}
       {isShareModalOpen && (
-        <div className="fixed inset-0 z-[70] bg-stone-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 pb-24 overflow-hidden sm:overflow-y-auto">
-          <div className="bg-white rounded-t-[32px] rounded-b-none sm:rounded-3xl max-w-lg w-full shadow-2xl border border-stone-200 p-5 sm:p-6 relative space-y-5 max-h-[88vh] overflow-y-auto animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[70] bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-3 pb-24 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-stone-200 p-5 sm:p-6 relative space-y-5 max-h-[88vh] overflow-y-auto">
             <button
               onClick={() => setIsShareModalOpen(false)}
               className="absolute left-5 top-5 text-stone-400 hover:text-stone-600 p-2 rounded-xl hover:bg-stone-100 transition-colors"
@@ -876,7 +878,7 @@ export const ShoppingListPage: React.FC = () => {
 
       {/* CLEAR ALL CONFIRMATION MODAL */}
       {isClearConfirmOpen && (
-        <div className="fixed inset-0 z-[70] bg-stone-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 pb-24 overflow-hidden sm:overflow-y-auto animate-in fade-in">
+        <div className="fixed inset-0 z-[70] bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-3 pb-24 sm:p-4 overflow-y-auto animate-in fade-in">
           <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-stone-200 p-5 sm:p-6 relative space-y-5">
             <button
               onClick={() => setIsClearConfirmOpen(false)}
@@ -923,8 +925,8 @@ export const ShoppingListPage: React.FC = () => {
 
       {/* SNAPP MARKET ONLINE PURCHASE MODAL */}
       {isSnappMarketModalOpen && (
-        <div className="fixed inset-0 z-[70] bg-stone-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 pb-24 overflow-hidden sm:overflow-y-auto animate-in fade-in">
-          <div className="bg-white rounded-t-[32px] rounded-b-none sm:rounded-3xl max-w-xl w-full shadow-2xl border border-stone-200 p-5 sm:p-6 relative space-y-5 max-h-[88vh] flex flex-col justify-between overflow-y-auto animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[70] bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-3 pb-24 sm:p-4 overflow-y-auto animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-stone-200 p-5 sm:p-6 relative space-y-5 max-h-[88vh] flex flex-col justify-between overflow-y-auto">
             <button
               onClick={() => setIsSnappMarketModalOpen(false)}
               className="absolute left-5 top-5 text-stone-400 hover:text-stone-600 p-2 rounded-xl hover:bg-stone-100 transition-colors z-10"
@@ -964,7 +966,7 @@ export const ShoppingListPage: React.FC = () => {
               {/* Action Toolbar */}
               <div className="flex flex-wrap items-center justify-between gap-2.5">
                 <a
-                  onClick={(e) => { e.preventDefault(); openExternalLink("https://snapp.market"); }}
+                  href="https://snapp.market"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-4 py-2.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs flex items-center gap-2 shadow-sm transition-all"
@@ -1007,7 +1009,7 @@ export const ShoppingListPage: React.FC = () => {
                         </div>
 
                         <a
-                          onClick={(e) => { e.preventDefault(); openExternalLink(`https://snapp.market/shopping-list/general-search?query=${encodeURIComponent(item.name)}`); }}
+                          href={`https://snapp.market/shopping-list/general-search?query=${encodeURIComponent(item.name)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all shrink-0 cursor-pointer"

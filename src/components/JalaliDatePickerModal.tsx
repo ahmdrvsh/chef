@@ -144,8 +144,8 @@ export const JalaliDatePickerModal: React.FC<JalaliDatePickerModalProps> = ({
   const yearOptions = Array.from({ length: 10 }, (_, i) => currentJalaliToday.jy - 2 + i);
 
   return (
-    <div className="fixed inset-0 z-[110] bg-stone-900/70 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden sm:overflow-y-auto">
-      <div className="bg-white w-full max-w-md max-h-[90vh] flex flex-col rounded-t-[32px] rounded-b-none sm:rounded-3xl shadow-2xl border-t sm:border border-stone-200 overflow-hidden animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[110] bg-stone-900/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-white w-full max-w-md max-h-[90vh] flex flex-col rounded-3xl shadow-2xl border border-stone-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
         <div className="bg-gradient-to-r from-emerald-800 via-teal-800 to-stone-900 text-white p-4 sm:p-5 shrink-0">

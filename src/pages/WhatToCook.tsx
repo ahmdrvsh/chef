@@ -23,6 +23,8 @@ import { Recipe, FridgeItem, CATEGORIES, MEAL_TYPES, DIET_TYPES, DIFFICULTIES, T
 import { ImageWithFallback } from '../components/ImageWithFallback';
 import { fetchRecipes, fetchFridge } from '../db';
 import { matchIngredientInFridge } from '../utils/unitConverter';
+import { VoiceAssistantModal } from '../components/VoiceAssistantModal';
+import { Mic } from 'lucide-react';
 
 export const WhatToCookPage: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -40,6 +42,7 @@ export const WhatToCookPage: React.FC = () => {
 
   // Toggle filter drawer/modal
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isVoiceAssistantOpen, setIsVoiceAssistantOpen] = useState(false);
 
   useEffect(() => {
     loadAll();
@@ -177,6 +180,16 @@ export const WhatToCookPage: React.FC = () => {
 
         {/* Action icons & Filter trigger */}
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsVoiceAssistantOpen(true)}
+            className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-r from-emerald-800 to-teal-800 hover:from-emerald-900 hover:to-teal-900 text-white rounded-xl sm:rounded-2xl text-xs font-black shadow-md shadow-emerald-900/20 hover:scale-102 active:scale-95 transition-all min-h-[44px] cursor-pointer"
+            title="دستیار صوتی هوشمند"
+          >
+            <Mic className="w-4 h-4 text-amber-300 animate-pulse" />
+            <span className="hidden sm:inline">دستیار صوتی</span>
+          </button>
+
           <Link
             to="/fridge"
             className="hidden sm:flex items-center gap-1.5 px-3.5 py-2.5 bg-stone-100 hover:bg-stone-200/70 text-stone-700 rounded-xl text-xs font-bold transition-all min-h-[44px]"
@@ -691,6 +704,11 @@ export const WhatToCookPage: React.FC = () => {
           </button>
         </div>
       )}
+      {/* Voice Assistant Modal */}
+      <VoiceAssistantModal
+        isOpen={isVoiceAssistantOpen}
+        onClose={() => setIsVoiceAssistantOpen(false)}
+      />
     </div>
   );
 };

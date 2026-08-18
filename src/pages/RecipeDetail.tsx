@@ -18,12 +18,10 @@ import {
   UserCheck,
   Video,
   Play,
-  ExternalLink,
-  Flame
+  ExternalLink
 } from 'lucide-react';
-import { Recipe, FridgeItem, ShoppingItem, RecipeIngredient, RecipeComment, RecipeRating, Ingredient } from '../data/initialData';
+import { Recipe, FridgeItem, ShoppingItem, RecipeIngredient, RecipeComment, RecipeRating } from '../data/initialData';
 import { ImageWithFallback } from '../components/ImageWithFallback';
-import { openExternalLink } from '../lib/capacitor';
 import {
   fetchRecipes,
   fetchFridge,
@@ -31,11 +29,9 @@ import {
   saveShoppingList,
   addRecipeComment,
   rateRecipe,
-  getRecipeEffectiveRating,
-  fetchIngredients
+  getRecipeEffectiveRating
 } from '../db';
 import { matchIngredientInFridge } from '../utils/unitConverter';
-import { calculateRecipeNutrition } from '../utils/calorieCalculator';
 import { useAuth } from '../context/AuthContext';
 
 export const RecipeDetailPage: React.FC = () => {
@@ -48,9 +44,6 @@ export const RecipeDetailPage: React.FC = () => {
   const [fridge, setFridge] = useState<FridgeItem[]>([]);
   const [addedToCart, setAddedToCart] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [allIngredients, setAllIngredients] = useState<Ingredient[]>([]);
-  const [activeSubstituteModal, setActiveSubstituteModal] = useState<RecipeIngredient | null>(null);
-  const [activeConversionModal, setActiveConversionModal] = useState<RecipeIngredient | null>(null);
 
   // Comment & Rating States
   const [commentText, setCommentText] = useState('');
@@ -61,13 +54,10 @@ export const RecipeDetailPage: React.FC = () => {
 
   useEffect(() => {
     loadData();
-    fetchIngredients().then(setAllIngredients);
     const handleUpdate = () => loadData();
     window.addEventListener('sofreh_recipes_updated', handleUpdate);
     return () => window.removeEventListener('sofreh_recipes_updated', handleUpdate);
   }, [id]);
-
-  const nutrition = calculateRecipeNutrition(recipe, allIngredients);
 
   const loadData = async () => {
     const recipes = await fetchRecipes();
@@ -225,44 +215,24 @@ export const RecipeDetailPage: React.FC = () => {
     const fridgeStatus = matchIngredientInFridge(ing.name, amount, ing.unit, fridge);
 
     return (
-      <div key={idx} className="p-3 rounded-2xl bg-stone-50/80 border border-stone-100 space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <span className="text-xs font-bold text-stone-800 block">{ing.name}</span>
-            {fridgeStatus.isSufficient ? (
-              <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md inline-block">
-                ✓ در یخچال موجود است
-              </span>
-            ) : fridgeStatus.isInFridge ? (
-              <span className="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-md inline-block">
-                {fridgeStatus.statusText}
-              </span>
-            ) : (
-              <span className="text-[10px] text-stone-400 block">نیاز به خرید دارد</span>
-            )}
-          </div>
-          <span className="text-xs font-black text-amber-700 bg-amber-100/80 px-2.5 py-1 rounded-xl">
-            {amount} {ing.unit}
-          </span>
+      <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-stone-50/80 border border-stone-100">
+        <div className="space-y-0.5">
+          <span className="text-xs font-bold text-stone-800 block">{ing.name}</span>
+          {fridgeStatus.isSufficient ? (
+            <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md inline-block">
+              ✓ در یخچال موجود است
+            </span>
+          ) : fridgeStatus.isInFridge ? (
+            <span className="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-md inline-block">
+              {fridgeStatus.statusText}
+            </span>
+          ) : (
+            <span className="text-[10px] text-stone-400 block">نیاز به خرید دارد</span>
+          )}
         </div>
-
-        {/* Two action buttons: جایگزین پیشنهادی and تبدیل واحد */}
-        <div className="flex items-center gap-2 pt-1 border-t border-stone-200/60">
-          <button
-            type="button"
-            onClick={() => setActiveSubstituteModal(ing)}
-            className="flex-1 py-1 px-2 bg-amber-50 hover:bg-amber-100 text-amber-800 text-[11px] font-bold rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer"
-          >
-            🔄 جایگزین پیشنهادی
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveConversionModal(ing)}
-            className="flex-1 py-1 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer"
-          >
-            ⚖️ تبدیل واحد
-          </button>
-        </div>
+        <span className="text-xs font-black text-amber-700 bg-amber-100/80 px-2.5 py-1 rounded-xl">
+          {amount} {ing.unit}
+        </span>
       </div>
     );
   };
@@ -360,17 +330,15 @@ export const RecipeDetailPage: React.FC = () => {
               <p className="text-stone-300 text-xs mt-0.5">جهت مشاهده کامل فیلم آموزش طرز تهیه، وارد لینک زیر شوید:</p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              openExternalLink(trimmed);
-            }}
+          <a
+            href={trimmed}
+            target="_blank"
+            rel="noopener noreferrer"
             className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-colors flex items-center gap-2 shrink-0 self-end sm:self-center"
           >
             <span>مشاهده فیلم آموزشی</span>
             <ExternalLink className="w-4 h-4" />
-          </button>
+          </a>
         </div>
       </div>
     );
@@ -390,7 +358,7 @@ export const RecipeDetailPage: React.FC = () => {
       {/* Main Header Card */}
       <div className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs border border-stone-200/90 grid grid-cols-1 md:grid-cols-2">
         <div className="relative h-52 sm:h-72 md:h-full bg-stone-100">
-          <ImageWithFallback loading="lazy" decoding="async" fetchpriority="low"
+          <ImageWithFallback
             src={recipe.image}
             alt={recipe.title}
             className="w-full h-full object-cover"
@@ -461,9 +429,9 @@ export const RecipeDetailPage: React.FC = () => {
               <span className="text-xs font-bold text-stone-800">{recipe.prepTime + recipe.cookTime} دقیقه</span>
             </div>
             <div>
-              <Flame className="w-4 h-4 text-rose-600 mx-auto mb-1" />
-              <span className="block text-[10px] text-stone-500">کالری (در ۱۰۰ گرم)</span>
-              <span className="text-xs font-bold text-stone-800">{nutrition.caloriesPer100g} کیلوکالری</span>
+              <Users className="w-4 h-4 text-emerald-700 mx-auto mb-1" />
+              <span className="block text-[10px] text-stone-500">تعداد نفرات اولیه</span>
+              <span className="text-xs font-bold text-stone-800">{recipe.servings} نفر</span>
             </div>
             <div>
               <Star className="w-4 h-4 text-amber-500 fill-amber-400 mx-auto mb-1" />
@@ -770,63 +738,6 @@ export const RecipeDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Substitute Modal */}
-      {activeSubstituteModal && (
-        <div className="fixed inset-0 z-[120] bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-stone-200 animate-in zoom-in-95 duration-200">
-            <h3 className="text-base font-bold text-stone-900 flex items-center gap-2">
-              <span>🔄 جایگزین پیشنهادی برای {activeSubstituteModal.name}</span>
-            </h3>
-            <div className="p-4 bg-amber-50 rounded-2xl text-xs font-medium text-stone-700 leading-relaxed border border-amber-200/60">
-              {(() => {
-                const db = allIngredients.find(i => i.name.trim().toLowerCase() === activeSubstituteModal.name.trim().toLowerCase());
-                if (db?.substitutes) return db.substitutes;
-                return 'برای این ماده اولیه جایگزین خاصی ثبت نشده است. می‌توانید از اقلام مشابه در همان دسته‌بندی استفاده کنید.';
-              })()}
-            </div>
-            <button
-              type="button"
-              onClick={() => setActiveSubstituteModal(null)}
-              className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-md"
-            >
-              متوجه شدم
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Conversion Modal */}
-      {activeConversionModal && (
-        <div className="fixed inset-0 z-[120] bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-stone-200 animate-in zoom-in-95 duration-200">
-            <h3 className="text-base font-bold text-stone-900 flex items-center gap-2">
-              <span>⚖️ تبدیل واحد برای {activeConversionModal.name}</span>
-            </h3>
-            <div className="p-4 bg-emerald-50 rounded-2xl text-xs font-medium text-stone-700 space-y-2 border border-emerald-200/60">
-              {(() => {
-                const db = allIngredients.find(i => i.name.trim().toLowerCase() === activeConversionModal.name.trim().toLowerCase());
-                if (db?.conversionText) {
-                  return db.conversionText.split('|').map((part, i) => <div key={i}>• {part.trim()}</div>);
-                }
-                if (db?.conversions && db.conversions.length > 0) {
-                  return db.conversions.map((conv, i) => (
-                    <div key={i}>• ۱ {conv.fromUnit} = {conv.toValue} {conv.toUnit}</div>
-                  ));
-                }
-                return <div>واحد پایه: {db?.defaultUnit || activeConversionModal.unit} (تبدیل استاندارد گرم و کیلوگرم فعال است)</div>;
-              })()}
-            </div>
-            <button
-              type="button"
-              onClick={() => setActiveConversionModal(null)}
-              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-md"
-            >
-              بستن
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

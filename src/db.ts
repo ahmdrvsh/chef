@@ -625,6 +625,34 @@ export async function saveShoppingList(items: ShoppingItem[]): Promise<void> {
   }
 }
 
+export async function addToShoppingList(item: {
+  name: string;
+  quantity?: number;
+  unit?: string;
+  category?: string;
+}): Promise<void> {
+  const currentList = await fetchShoppingList();
+  const existingIdx = currentList.findIndex(
+    i => i.name.trim().toLowerCase() === item.name.trim().toLowerCase()
+  );
+  if (existingIdx >= 0) {
+    currentList[existingIdx].quantity =
+      (currentList[existingIdx].quantity || 1) + (item.quantity || 1);
+  } else {
+    currentList.push({
+      id: 'shop_' + Date.now() + Math.random().toString(36).substring(2, 6),
+      name: item.name.trim(),
+      quantity: item.quantity || 1,
+      unit: item.unit || 'واحد',
+      category: item.category || 'سایر',
+      isBought: false,
+      isFromFridge: false,
+      statusText: 'اضافه شده توسط دستیار صوتی'
+    });
+  }
+  await saveShoppingList(currentList);
+}
+
 export async function syncPendingData(): Promise<void> {
   const pendingShopping = getUserLS<boolean>(LS_PENDING_SHOPPING_SYNC, false);
   if (pendingShopping) {
@@ -669,11 +697,11 @@ export interface ChefSettings {
 }
 
 export const DEFAULT_CHEF_SETTINGS: ChefSettings = {
-  name: 'محیا',
-  title: 'سرآشپز سفره',
-  message: 'من محیا هستم و میخوام تو آشپزی بهتون کمک کنم.',
-  image: '/mahya.jpg',
-  instagram: 'maahyas.homechef',
+  name: 'سفره',
+  title: 'دستیار هوشمند آشپزی',
+  message: 'دستیار هوشمند آشپزی سفره آماده همراهی و راهنمایی شما در انتخاب و پخت غذا است.',
+  image: '/logo.png',
+  instagram: 'sofreh.app',
   bio: 'سفره بر اساس موادی که در یخچال خانه دارید، بهترین دستورات پخت اصیل و خوش‌طعم را پیشنهاد می‌دهد.'
 };
 

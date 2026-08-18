@@ -5,7 +5,7 @@ interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElemen
 }
 
 export const DEFAULT_FOOD_IMAGE = 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&auto=format&fit=crop';
-export const DEFAULT_CHEF_IMAGE = '/mahya.jpg';
+export const DEFAULT_CHEF_IMAGE = 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=600&auto=format&fit=crop';
 
 export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   src,

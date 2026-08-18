@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { ImageWithFallback } from './ImageWithFallback';
-import { sanitizeCategoryImage } from '../utils/imageHelper';
 
 export interface SubCategoryItem {
   id: string;
@@ -81,7 +80,7 @@ export const CategoryCarouselRow: React.FC<CategoryCarouselRowProps> = ({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {/* Row Header */}
       <div className="px-1">
         <h3 className="text-xs sm:text-sm font-black text-stone-900">
@@ -92,7 +91,7 @@ export const CategoryCarouselRow: React.FC<CategoryCarouselRowProps> = ({
       {/* Horizontal Scrollable Carousel with 30% smaller adjacent cards */}
       <div
         ref={containerRef}
-        className="flex items-center gap-2 sm:gap-5 overflow-x-auto py-3 px-[18vw] sm:px-6 scrollbar-none snap-x snap-mandatory scroll-smooth -mx-3.5 sm:-mx-6 lg:-mx-8"
+        className="flex items-center gap-1 sm:gap-4 overflow-x-auto py-3 px-[18vw] sm:px-6 scrollbar-none snap-x snap-mandatory scroll-smooth -mx-3.5 sm:-mx-6 lg:-mx-8"
         style={{ scrollPaddingLeft: '18vw', scrollPaddingRight: '18vw' }}
       >
         {group.items.map((item, idx) => {
@@ -111,7 +110,7 @@ export const CategoryCarouselRow: React.FC<CategoryCarouselRowProps> = ({
               }`}
             >
               {/* Background Image */}
-              <ImageWithFallback loading="lazy" decoding="async" fetchpriority="low"
+              <ImageWithFallback
                 src={item.image}
                 alt={item.title}
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

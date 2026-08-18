@@ -1,209 +1,275 @@
-import { FridgeItem, Ingredient, IngredientConversion, INITIAL_INGREDIENTS, COMMON_UNITS } from '../data/initialData';
+import { FridgeItem, Ingredient, IngredientConversion } from '../data/initialData';
 
+// Standardize Persian text for exact or soft matching
 export function normalizePersianText(str: string): string {
   if (!str) return '';
   return str
+    .trim()
     .replace(/ي/g, 'ی')
     .replace(/ك/g, 'ک')
-    .replace(/ة/g, 'ه')
-    .replace(/ۀ/g, 'ه')
-    .replace(/[أإآ]/g, 'ا')
+    .replace(/آ/g, 'ا')
+    .replace(/[\u064B-\u065F]/g, '') // remove diacritics
     .replace(/\s+/g, ' ')
-    .trim()
     .toLowerCase();
 }
 
-export function getIngredientConversions(ingredientName: string, unit: string, ingredientsList?: Ingredient[]): IngredientConversion[] {
-  const normName = normalizePersianText(ingredientName);
-  const list = ingredientsList && ingredientsList.length > 0 ? ingredientsList : INITIAL_INGREDIENTS;
-  const matchedIng = list.find(i => normalizePersianText(i.name) === normName || normalizePersianText(i.name).includes(normName) || normName.includes(normalizePersianText(i.name)));
-  if (matchedIng && matchedIng.conversions && matchedIng.conversions.length > 0) {
-    return matchedIng.conversions;
-  }
-  return [];
-}
-
-export function convertUnitValue(
-  value: number,
-  fromUnit: string,
-  toUnit: string,
-  conversions: IngredientConversion[],
-  defaultUnit: string = 'گرم'
-): number {
-  if (isNaN(value)) return 0;
-  const f = (fromUnit || '').trim().toLowerCase();
-  const t = (toUnit || '').trim().toLowerCase();
-
-  if (f === t) return value;
-
-  // Handle direct unit weight equivalents
-  const unitWeights: Record<string, number> = {
-    'گرم': 1,
-    'g': 1,
-    'gr': 1,
-    'کیلوگرم': 1000,
-    'kg': 1000,
-    'میلی‌لیتر': 1,
-    'ml': 1,
-    'سی‌سی': 1,
-    'لیتر': 1000,
-    'قاشق غذاخوری': 15,
-    'ق.غ': 15,
-    'قاشق چای‌خوری': 5,
-    'ق.چ': 5,
-    'پیمانه': 240,
-    'لیوان': 240,
-    'عدد': 100,
-    'حبه': 5,
-    'بسته': 100,
-    'دسته': 100
-  };
-
-  // If both units have standard weights, convert via grams
-  let valueInGrams = value;
-  if (unitWeights[f] !== undefined) {
-    valueInGrams = value * unitWeights[f];
-  } else {
-    // Check conversions array
-    const conv = conversions.find(c => 
-      (c.fromUnit?.toLowerCase() === f && c.toUnit?.toLowerCase() === t) ||
-      (c.unit?.toLowerCase() === f && c.toUnit?.toLowerCase() === t)
-    );
-    if (conv && conv.ratio) {
-      return value * conv.ratio;
-    }
-    // Try via default unit
-    const toDef = conversions.find(c => c.unit?.toLowerCase() === f || c.fromUnit?.toLowerCase() === f);
-    if (toDef && toDef.ratio) {
-      valueInGrams = value * toDef.ratio;
-    } else {
-      valueInGrams = value * (unitWeights[defaultUnit.toLowerCase()] || 100);
-    }
-  }
-
-  if (unitWeights[t] !== undefined) {
-    return valueInGrams / unitWeights[t];
-  }
-
-  const revConv = conversions.find(c => 
-    (c.fromUnit?.toLowerCase() === t && c.toUnit?.toLowerCase() === f) ||
-    (c.unit?.toLowerCase() === t && c.toUnit?.toLowerCase() === f)
-  );
-  if (revConv && revConv.ratio && revConv.ratio > 0) {
-    return valueInGrams / revConv.ratio;
-  }
-
-  return valueInGrams / (unitWeights[defaultUnit.toLowerCase()] || 100);
+export interface FridgeMatchResult {
+  isInFridge: boolean;
+  fridgeQuantity: number;
+  fridgeUnit: string;
+  statusText: string;
+  isSufficient: boolean;
+  deficitQuantity?: number | string;
 }
 
 export function matchIngredientInFridge(
-  recipeIngName: string,
-  recipeIngAmount: number,
-  recipeIngUnit: string,
-  fridgeItems: FridgeItem[],
-  allIngredients: Ingredient[] = INITIAL_INGREDIENTS
-): { isInFridge: boolean; isSufficient: boolean; statusText: string } {
-  const normRecipeName = normalizePersianText(recipeIngName);
-  
-  const matchedFridgeItem = fridgeItems.find(item => {
-    const normItemName = normalizePersianText(item.name);
-    return normItemName === normRecipeName || normItemName.includes(normRecipeName) || normRecipeName.includes(normItemName);
+  requiredName: string,
+  requiredQuantity: number | string,
+  requiredUnit: string,
+  fridge: FridgeItem[]
+): FridgeMatchResult {
+  const normRequired = normalizePersianText(requiredName);
+
+  // Find in fridge by name
+  const found = fridge.find(item => {
+    const normItem = normalizePersianText(item.name);
+    return normItem === normRequired || normItem.includes(normRequired) || normRequired.includes(normItem);
   });
 
-  if (!matchedFridgeItem) {
-    return { isInFridge: false, isSufficient: false, statusText: 'موجود نیست' };
+  if (!found || found.quantity <= 0) {
+    return {
+      isInFridge: false,
+      fridgeQuantity: 0,
+      fridgeUnit: requiredUnit,
+      statusText: 'موجود نیست',
+      isSufficient: false
+    };
   }
 
-  const conversions = getIngredientConversions(recipeIngName, recipeIngUnit, allIngredients);
-  const dbIng = allIngredients.find(i => normalizePersianText(i.name) === normRecipeName);
-  
-  const fridgeAmountInGrams = convertUnitValue(matchedFridgeItem.amount, matchedFridgeItem.unit, 'گرم', conversions, dbIng?.defaultUnit || 'گرم');
-  const recipeAmountInGrams = convertUnitValue(recipeIngAmount, recipeIngUnit, 'گرم', conversions, dbIng?.defaultUnit || 'گرم');
+  const fridgeQty = Number(found.quantity) || 0;
+  const reqQty = Number(requiredQuantity) || 0;
 
-  const isSufficient = fridgeAmountInGrams >= recipeAmountInGrams;
+  // If required quantity is not a number or 0 (like "به مقدار لازم")
+  if (isNaN(reqQty) || reqQty === 0) {
+    return {
+      isInFridge: true,
+      fridgeQuantity: fridgeQty,
+      fridgeUnit: found.unit,
+      statusText: 'در یخچال موجود است',
+      isSufficient: true
+    };
+  }
 
-  return {
-    isInFridge: true,
-    isSufficient,
-    statusText: isSufficient ? 'موجود و کافی' : `موجود است (${matchedFridgeItem.amount} ${matchedFridgeItem.unit}) - کمتر از نیاز`
-  };
+  // Same unit check or simple numeric comparison
+  if (fridgeQty >= reqQty) {
+    return {
+      isInFridge: true,
+      fridgeQuantity: fridgeQty,
+      fridgeUnit: found.unit,
+      statusText: 'در یخچال موجود است',
+      isSufficient: true
+    };
+  } else {
+    const deficit = reqQty - fridgeQty;
+    return {
+      isInFridge: true,
+      fridgeQuantity: fridgeQty,
+      fridgeUnit: found.unit,
+      statusText: `بخشی در یخچال موجود است (موجود: ${fridgeQty} ${found.unit} | کسری: ${deficit} ${requiredUnit})`,
+      isSufficient: false,
+      deficitQuantity: deficit
+    };
+  }
 }
 
-export function parseQuantityNumber(amountStr: string | number): { num: number; unit?: string } {
-  if (typeof amountStr === 'number') return { num: amountStr };
-  if (!amountStr) return { num: 1 };
+// ============================================================================
+// UNIT CONVERSION ENGINE (تبدیل هوشمند واحدها با نسبت‌های دقیق)
+// ============================================================================
 
-  const s = amountStr.toString().trim();
-  const numMatch = s.match(/^([\d۰-۹]+(?:\.\d+)?|\d+\/\d+)/);
-  if (numMatch) {
-    let raw = numMatch[1];
-    if (raw.includes('/')) {
-      const parts = raw.split('/');
-      const n = parseFloat(parts[0]);
-      const d = parseFloat(parts[1]);
-      if (!isNaN(n) && !isNaN(d) && d !== 0) {
-        return { num: n / d };
-      }
+/**
+ * Standard fallbacks for common cooking units if an ingredient does not have explicit conversion ratios set.
+ * Each entry maps a base unit to alternative units and their conversion ratio (1 baseUnit = ratio * altUnit).
+ */
+const DEFAULT_UNIT_CONVERSIONS: Record<string, IngredientConversion[]> = {
+  'پیمانه': [
+    { unit: 'پیمانه', ratio: 1 },
+    { unit: 'گرم', ratio: 240 },
+    { unit: 'میلی‌لیتر', ratio: 240 },
+    { unit: 'قاشق غذاخوری', ratio: 16 },
+    { unit: 'قاشق چای‌خوری', ratio: 48 },
+    { unit: 'لیوان', ratio: 1 }
+  ],
+  'لیوان': [
+    { unit: 'لیوان', ratio: 1 },
+    { unit: 'پیمانه', ratio: 1 },
+    { unit: 'گرم', ratio: 240 },
+    { unit: 'میلی‌لیتر', ratio: 240 },
+    { unit: 'قاشق غذاخوری', ratio: 16 },
+    { unit: 'قاشق چای‌خوری', ratio: 48 }
+  ],
+  'کیلوگرم': [
+    { unit: 'کیلوگرم', ratio: 1 },
+    { unit: 'گرم', ratio: 1000 },
+    { unit: 'عدد بزرگ', ratio: 5 },
+    { unit: 'عدد', ratio: 7 },
+    { unit: 'عدد کوچک', ratio: 10 }
+  ],
+  'کیلو': [
+    { unit: 'کیلو', ratio: 1 },
+    { unit: 'کیلوگرم', ratio: 1 },
+    { unit: 'گرم', ratio: 1000 },
+    { unit: 'عدد بزرگ', ratio: 5 },
+    { unit: 'عدد', ratio: 7 },
+    { unit: 'عدد کوچک', ratio: 10 }
+  ],
+  'گرم': [
+    { unit: 'گرم', ratio: 1 },
+    { unit: 'کیلوگرم', ratio: 0.001 },
+    { unit: 'پیمانه', ratio: 0.00416 },
+    { unit: 'قاشق غذاخوری', ratio: 0.0667 }
+  ],
+  'عدد': [
+    { unit: 'عدد', ratio: 1 },
+    { unit: 'عدد بزرگ', ratio: 0.75 },
+    { unit: 'عدد کوچک', ratio: 1.5 },
+    { unit: 'گرم', ratio: 150 },
+    { unit: 'کیلوگرم', ratio: 0.15 }
+  ],
+  'قاشق غذاخوری': [
+    { unit: 'قاشق غذاخوری', ratio: 1 },
+    { unit: 'قاشق چای‌خوری', ratio: 3 },
+    { unit: 'میلی‌لیتر', ratio: 15 },
+    { unit: 'گرم', ratio: 15 },
+    { unit: 'پیمانه', ratio: 0.0625 }
+  ],
+  'قاشق چای‌خوری': [
+    { unit: 'قاشق چای‌خوری', ratio: 1 },
+    { unit: 'قاشق غذاخوری', ratio: 0.3333 },
+    { unit: 'میلی‌لیتر', ratio: 5 },
+    { unit: 'گرم', ratio: 5 }
+  ],
+  'میلی‌لیتر': [
+    { unit: 'میلی‌لیتر', ratio: 1 },
+    { unit: 'گرم', ratio: 1 },
+    { unit: 'پیمانه', ratio: 0.00416 },
+    { unit: 'قاشق غذاخوری', ratio: 0.0667 },
+    { unit: 'قاشق چای‌خوری', ratio: 0.2 }
+  ]
+};
+
+/**
+ * Normalizes unit strings for flexible comparison (e.g., 'کیلو' vs 'کیلوگرم', 'گرم' vs 'گرمی')
+ */
+export function normalizeUnitName(unit: string): string {
+  if (!unit) return '';
+  const u = unit.trim().toLowerCase();
+  if (u === 'کیلو' || u === 'کیلوگرم' || u === 'کیلو گرم') return 'کیلوگرم';
+  if (u === 'گرمی' || u === 'گرم') return 'گرم';
+  if (u === 'پیمانه' || u === 'لیوان') return 'پیمانه';
+  if (u === 'قاشق غذاخوری' || u === 'قاشق غذا خوری' || u === 'ق.غ') return 'قاشق غذاخوری';
+  if (u === 'قاشق چای‌خوری' || u === 'قاشق چای خوری' || u === 'ق.چ') return 'قاشق چای‌خوری';
+  if (u === 'میلی لیتر' || u === 'سی سی' || u === 'سی‌سی') return 'میلی‌لیتر';
+  return u;
+}
+
+/**
+ * Gets all logical units and their conversion ratios for a given ingredient.
+ */
+export function getIngredientConversions(
+  ingredientName: string,
+  currentUnit: string,
+  ingredientsList?: Ingredient[]
+): IngredientConversion[] {
+  const normName = normalizePersianText(ingredientName);
+  const matchedIng = ingredientsList?.find(i => normalizePersianText(i.name) === normName);
+
+  const baseUnit = matchedIng?.defaultUnit || currentUnit || 'عدد';
+  let conversions: IngredientConversion[] = [];
+
+  if (matchedIng?.conversions && matchedIng.conversions.length > 0) {
+    conversions = [...matchedIng.conversions];
+    // Ensure base unit is included
+    if (!conversions.some(c => c.unit === baseUnit)) {
+      conversions.unshift({ unit: baseUnit, ratio: 1 });
     }
-    const parsed = parseFloat(raw.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString()));
-    if (!isNaN(parsed)) {
-      return { num: parsed };
+  } else {
+    const fallback = DEFAULT_UNIT_CONVERSIONS[baseUnit] || DEFAULT_UNIT_CONVERSIONS[currentUnit] || [
+      { unit: currentUnit, ratio: 1 },
+      { unit: 'گرم', ratio: 100 },
+      { unit: 'عدد', ratio: 1 }
+    ];
+    conversions = [...fallback];
+  }
+
+  // Always ensure currentUnit is present in conversions if not yet
+  if (!conversions.some(c => c.unit === currentUnit)) {
+    conversions.push({ unit: currentUnit, ratio: 1 });
+  }
+
+  return conversions;
+}
+
+/**
+ * Converts a numeric quantity from `fromUnit` to `toUnit` based on specified or default conversion ratios.
+ */
+export function convertUnitValue(
+  numericAmount: number,
+  fromUnit: string,
+  toUnit: string,
+  conversions: IngredientConversion[],
+  defaultUnit: string
+): number {
+  if (isNaN(numericAmount) || fromUnit === toUnit) {
+    return numericAmount;
+  }
+
+  // Find ratio of fromUnit relative to defaultUnit
+  let fromRatio = 1;
+  if (fromUnit !== defaultUnit) {
+    const foundFrom = conversions.find(c => c.unit === fromUnit || normalizeUnitName(c.unit) === normalizeUnitName(fromUnit));
+    if (foundFrom && foundFrom.ratio > 0) {
+      fromRatio = foundFrom.ratio;
     }
   }
 
-  const persianNumbers: Record<string, string> = {
-    '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4',
-    '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9',
-    '½': '0.5', '¼': '0.25', '¾': '0.75', '⅓': '0.33', '⅔': '0.66'
-  };
-
-  let converted = s;
-  for (const [k, v] of Object.entries(persianNumbers)) {
-    converted = converted.replace(new RegExp(k, 'g'), v);
+  // Find ratio of toUnit relative to defaultUnit
+  let toRatio = 1;
+  if (toUnit !== defaultUnit) {
+    const foundTo = conversions.find(c => c.unit === toUnit || normalizeUnitName(c.unit) === normalizeUnitName(toUnit));
+    if (foundTo && foundTo.ratio > 0) {
+      toRatio = foundTo.ratio;
+    }
   }
 
-  const match = converted.match(/([0-9.]+)/);
+  // Conversion formula:
+  // 1. Convert amount to defaultUnit: amountInDefault = numericAmount / fromRatio
+  // 2. Convert defaultUnit to toUnit: amountInTo = amountInDefault * toRatio
+  const amountInDefault = numericAmount / fromRatio;
+  const result = amountInDefault * toRatio;
+
+  // Round to max 2 decimal places cleanly
+  return Math.round(result * 100) / 100;
+}
+
+/**
+ * Parses quantity string or number into a clean number.
+ * Example: "0.3", "۳.۵", "3 کیلو" -> 0.3, 3.5, 3
+ */
+export function parseQuantityNumber(rawQty: number | string): { num: number; unitSuffix?: string } {
+  if (typeof rawQty === 'number') return { num: rawQty };
+  if (!rawQty) return { num: 1 };
+
+  // Convert Persian numbers to English
+  const englishNumStr = rawQty
+    .toString()
+    .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString())
+    .replace(/,/g, '.');
+
+  const match = englishNumStr.match(/([0-9]+(?:\.[0-9]+)?)/);
   if (match) {
     const num = parseFloat(match[1]);
     return { num: isNaN(num) ? 1 : num };
   }
 
   return { num: 1 };
-}
-
-export function getValidUnitsForIngredient(ingredientName: string, allIngredients: Ingredient[] = []): string[] {
-  const name = normalizePersianText(ingredientName);
-  const list = allIngredients && allIngredients.length > 0 ? allIngredients : INITIAL_INGREDIENTS;
-  const dbIng = list.find(i => normalizePersianText(i.name) === name || normalizePersianText(i.name).includes(name) || name.includes(normalizePersianText(i.name)));
-  
-  const unitsSet = new Set<string>();
-
-  if (dbIng) {
-    if (dbIng.defaultUnit) unitsSet.add(dbIng.defaultUnit.trim());
-    
-    if (Array.isArray(dbIng.allowedUnits) && dbIng.allowedUnits.length > 0) {
-      dbIng.allowedUnits.forEach(u => {
-        if (u && u.trim()) unitsSet.add(u.trim());
-      });
-    } else if (typeof dbIng.allowedUnits === 'string' && (dbIng.allowedUnits as string).trim().length > 0) {
-      (dbIng.allowedUnits as string).split(/،|,/).forEach(u => {
-        const t = u.trim();
-        if (t) unitsSet.add(t);
-      });
-    }
-
-    if (dbIng.conversions && Array.isArray(dbIng.conversions)) {
-      dbIng.conversions.forEach(c => {
-        if (c.unit && c.unit.trim()) unitsSet.add(c.unit.trim());
-        if (c.fromUnit && c.fromUnit.trim()) unitsSet.add(c.fromUnit.trim());
-        if (c.toUnit && c.toUnit.trim()) unitsSet.add(c.toUnit.trim());
-      });
-    }
-  }
-
-  if (unitsSet.size === 0) {
-    unitsSet.add('گرم');
-  }
-
-  return Array.from(unitsSet);
 }

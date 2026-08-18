@@ -19,9 +19,7 @@ export const EditIngredientModal: React.FC<EditIngredientModalProps> = ({
   const [name, setName] = useState('');
   const [category, setCategory] = useState(INGREDIENT_CATEGORIES[0]);
   const [defaultUnit, setDefaultUnit] = useState(COMMON_UNITS[0]);
-  const [caloriesPer100g, setCaloriesPer100g] = useState('150');
   const [conversions, setConversions] = useState<IngredientConversion[]>([]);
-  const [allowedUnitsStr, setAllowedUnitsStr] = useState('');
 
   // New conversion form state
   const [targetUnit, setTargetUnit] = useState('گرم');
@@ -32,15 +30,7 @@ export const EditIngredientModal: React.FC<EditIngredientModalProps> = ({
       setName(ingredient.name || '');
       setCategory(ingredient.category || INGREDIENT_CATEGORIES[0]);
       setDefaultUnit(ingredient.defaultUnit || COMMON_UNITS[0]);
-      setCaloriesPer100g(String(ingredient.caloriesPer100g ?? 150));
       setConversions(ingredient.conversions ? [...ingredient.conversions] : []);
-      if (Array.isArray(ingredient.allowedUnits)) {
-        setAllowedUnitsStr(ingredient.allowedUnits.join('، '));
-      } else if (typeof ingredient.allowedUnits === 'string') {
-        setAllowedUnitsStr(ingredient.allowedUnits);
-      } else {
-        setAllowedUnitsStr('');
-      }
     }
   }, [ingredient]);
 
@@ -73,18 +63,11 @@ export const EditIngredientModal: React.FC<EditIngredientModalProps> = ({
     e.preventDefault();
     if (!name.trim()) return;
 
-    const calNum = parseFloat(caloriesPer100g) || 150;
-    const allowedUnits = allowedUnitsStr
-      ? allowedUnitsStr.split(/،|,/).map(u => u.trim()).filter(Boolean)
-      : undefined;
-
     const updated = await updateIngredient(ingredient.id, {
       name: name.trim(),
       category,
       defaultUnit,
-      caloriesPer100g: calNum,
-      conversions,
-      allowedUnits
+      conversions
     });
 
     onSuccess(updated);
@@ -92,8 +75,8 @@ export const EditIngredientModal: React.FC<EditIngredientModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-stone-900/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden sm:overflow-y-auto">
-      <div className="bg-white rounded-t-[32px] rounded-b-none sm:rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl border border-stone-200 overflow-hidden relative animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[100] bg-stone-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl border border-stone-200 overflow-hidden relative">
         {/* Header */}
         <div className="p-5 border-b border-stone-100 flex items-center justify-between shrink-0 bg-stone-50/50">
           <div className="flex items-center gap-3">
@@ -126,19 +109,6 @@ export const EditIngredientModal: React.FC<EditIngredientModalProps> = ({
               />
             </div>
 
-            <div>
-              <label className="block text-stone-700 font-bold mb-1">کالری در هر ۱۰۰ گرم (Kcal)</label>
-              <input
-                type="number"
-                step="1"
-                min="0"
-                value={caloriesPer100g}
-                onChange={e => setCaloriesPer100g(e.target.value)}
-                placeholder="مثال: ۱۵۰"
-                className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl focus:bg-white focus:outline-none focus:border-amber-500 font-bold text-stone-800"
-              />
-            </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-stone-700 font-bold mb-1">دسته‌بندی اصلی</label>
@@ -167,45 +137,33 @@ export const EditIngredientModal: React.FC<EditIngredientModalProps> = ({
             </div>
           </div>
 
-          <div>
-            <label className="block text-stone-700 font-bold mb-1">واحدهای مجاز (با کاما جدا کنید)</label>
-            <input
-              type="text"
-              value={allowedUnitsStr}
-              onChange={e => setAllowedUnitsStr(e.target.value)}
-              placeholder="مثال: گرم، کیلوگرم، پیمانه (خرد شده)، قاشق غذاخوری"
-              className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl focus:bg-white focus:outline-none focus:border-amber-500 font-medium text-stone-800 text-xs"
-            />
-            <p className="text-[10px] text-stone-400 mt-1">واحدهایی که کاربر در دستور پخت مجاز به انتخاب آن‌ها برای این ماده است.</p>
-          </div>
-
           {/* UNIT CONVERSIONS SECTION */}
           <div className="bg-amber-50/60 border border-amber-200/80 rounded-2xl p-4 space-y-3">
             <div className="flex items-center justify-between">
               <span className="font-extrabold text-amber-900 flex items-center gap-1.5">
                 <ArrowRightLeft className="w-4 h-4 text-amber-600" />
-                تعیین وزن هر واحد (چند گرم؟)
+                جدول نسبت‌های تبدیل واحد (واحد منطقی)
               </span>
               <span className="text-[11px] text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full font-bold">
-                واحد مرجع: گرم
+                پایه: ۱ {defaultUnit}
               </span>
             </div>
 
             <p className="text-[11px] text-stone-600 leading-relaxed">
-              مشخص کنید هر ۱ واحد (مانند ۱ عدد، ۱ پیمانه، ۱ قاشق و...) از این ماده معادل چند گرم است تا تبدیل واحدها در سبد خرید و دستور پخت دقیق کار کند.
+              تعیین کنید ۱ {defaultUnit} از این ماده، برابر با چه مقداری از واحدهای منطقی دیگر است.
             </p>
 
             {/* List of active conversions */}
             {conversions.length === 0 ? (
               <div className="text-[11px] text-stone-400 bg-white p-3 rounded-xl border border-amber-100 text-center">
-                هنوز هیچ وزن اختصاصی ثبت نشده است (از وزن‌های استاندارد پیش‌فرض استفاده خواهد شد).
+                هنوز هیچ نسبت تبدیل اختصاصی ثبت نشده است (از فرمول‌های استاندارد پیش‌فرض سیستم استفاده خواهد شد).
               </div>
             ) : (
               <div className="space-y-2">
                 {conversions.map(c => (
                   <div key={c.unit} className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-amber-200 text-xs">
                     <span className="font-bold text-stone-800">
-                      هر ۱ <span className="text-amber-800">{c.unit}</span> = <span className="text-amber-700 font-black">{c.ratio}</span> گرم
+                      ۱ {defaultUnit} = <span className="text-amber-700 font-black">{c.ratio}</span> {c.unit}
                     </span>
                     <button
                       type="button"
@@ -227,22 +185,22 @@ export const EditIngredientModal: React.FC<EditIngredientModalProps> = ({
                   onChange={e => setTargetUnit(e.target.value)}
                   className="w-full p-2 bg-white border border-stone-200 rounded-xl text-xs font-bold"
                 >
-                  {COMMON_UNITS.filter(u => u !== 'گرم' && u !== 'کیلوگرم').map(u => (
-                    <option key={u} value={u}>هر ۱ {u}</option>
+                  {COMMON_UNITS.filter(u => u !== defaultUnit).map(u => (
+                    <option key={u} value={u}>{u}</option>
                   ))}
                 </select>
               </div>
 
               <div className="w-full sm:w-1/3 flex items-center gap-1">
+                <span className="text-stone-400 text-[10px]">نسبت:</span>
                 <input
                   type="number"
                   step="any"
                   value={targetRatio}
                   onChange={e => setTargetRatio(e.target.value)}
-                  placeholder="وزن به گرم"
+                  placeholder="مقدار"
                   className="w-full p-2 bg-white border border-stone-200 rounded-xl text-xs font-bold text-center"
                 />
-                <span className="text-stone-500 text-[11px] font-bold shrink-0">گرم</span>
               </div>
 
               <button

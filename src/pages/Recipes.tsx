@@ -37,7 +37,7 @@ import {
   isMealTypeMatch,
   isDietMatch
 } from '../data/initialData';
-import { fetchRecipes, fetchChefSettings, getChefSettings, ChefSettings } from '../db';
+import { fetchRecipes } from '../db';
 import { ImageWithFallback } from '../components/ImageWithFallback';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { AddRecipeModal } from '../components/AddRecipeModal';
@@ -62,11 +62,6 @@ export const RecipesPage: React.FC = () => {
   const { user: currentUser } = useAuth();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [chefSettings, setChefSettings] = useState<ChefSettings>(getChefSettings());
-
-  useEffect(() => {
-    fetchChefSettings().then(setChefSettings);
-  }, []);
 
   // Filter States
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);

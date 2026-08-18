@@ -29,8 +29,10 @@ import {
   RefreshCw,
   Wifi,
   Eraser,
-  Filter
+  Filter,
+  Mic
 } from 'lucide-react';
+import { VoiceAssistantModal } from '../components/VoiceAssistantModal';
 import {
   FridgeItem,
   Ingredient,
@@ -97,6 +99,7 @@ export const FridgePage: React.FC = () => {
   // Jalali Shamsi DatePicker Modal State
   const [isJalaliPickerOpen, setIsJalaliPickerOpen] = useState<boolean>(false);
   const [jalaliPickerTarget, setJalaliPickerTarget] = useState<'add' | 'edit'>('edit');
+  const [isVoiceAssistantOpen, setIsVoiceAssistantOpen] = useState<boolean>(false);
 
   const handleClearFridge = async () => {
     if (fridgeItems.length === 0) {
@@ -521,6 +524,16 @@ export const FridgePage: React.FC = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsVoiceAssistantOpen(true)}
+            className="px-5 py-3.5 bg-gradient-to-r from-emerald-900 via-teal-900 to-stone-900 hover:from-black hover:to-teal-950 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg border border-emerald-400/30 transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+            title="دستیار صوتی هوشمند سرآشپز"
+          >
+            <Mic className="w-4 h-4 text-amber-300 animate-pulse" />
+            <span>دستیار صوتی هوشمند</span>
+          </button>
+
           <button
             onClick={handleClearFridge}
             className="p-3 bg-rose-600/90 hover:bg-rose-600 text-white font-extrabold text-xs sm:text-sm rounded-2xl backdrop-blur-md transition flex items-center justify-center gap-1.5 border border-rose-400/40 shadow-lg cursor-pointer active:scale-95"
@@ -1502,6 +1515,12 @@ export const FridgePage: React.FC = () => {
           }
         }}
         itemName={jalaliPickerTarget === 'edit' ? editName : (selectedIngredient?.name || '')}
+      />
+
+      {/* Voice Assistant Modal */}
+      <VoiceAssistantModal
+        isOpen={isVoiceAssistantOpen}
+        onClose={() => setIsVoiceAssistantOpen(false)}
       />
     </div>
   );

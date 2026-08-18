@@ -180,8 +180,8 @@ export const AutoFillSettingsModal: React.FC<Props> = ({
   const totalFamilyMembers = settings.familyDietProfiles.reduce((acc, curr) => acc + (curr.memberCount || 1), 0);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-slate-900/70 backdrop-blur-xs animate-fadeIn dir-rtl overflow-hidden sm:overflow-y-auto">
-      <div className="bg-white w-full max-w-3xl max-h-[95vh] sm:max-h-[90vh] rounded-t-[32px] rounded-b-none sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border-t sm:border border-stone-200 animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 md:p-6 bg-slate-900/70 backdrop-blur-xs animate-fadeIn dir-rtl overflow-y-auto">
+      <div className="bg-white w-full max-w-3xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-stone-200">
         
         {/* Modal Header */}
         <div className="flex items-center justify-between p-5 border-b border-stone-100 bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white">

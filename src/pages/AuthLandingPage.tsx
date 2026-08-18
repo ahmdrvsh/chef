@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { ChefHat, LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { isValidIranianMobile } from '../utils/authUtils';
-import { fetchChefSettings, getChefSettings, ChefSettings } from '../db';
 
 interface AuthLandingPageProps {
   defaultTab?: 'login' | 'register';
@@ -15,12 +14,6 @@ export const AuthLandingPage: React.FC<AuthLandingPageProps> = ({ defaultTab = '
   useEffect(() => {
     setActiveTab(defaultTab);
   }, [defaultTab]);
-
-  const [chefSettings, setChefSettings] = useState<ChefSettings>(getChefSettings());
-
-  useEffect(() => {
-    fetchChefSettings().then(setChefSettings);
-  }, []);
 
   // Form states
   const [loginIdentifier, setLoginIdentifier] = useState('');

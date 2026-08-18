@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Check, ChefHat, ShieldCheck, AlertCircle, Utensils, Salad, Clock, Image as ImageIcon, Video, Upload, Link as LinkIcon } from 'lucide-react';
-import { Recipe, RecipeIngredient, CATEGORIES, MEAL_TYPES, DIET_TYPES, Ingredient } from '../data/initialData';
+import { Recipe, RecipeIngredient, CATEGORIES, MEAL_TYPES, DIET_TYPES } from '../data/initialData';
 import { IngredientInput } from './IngredientInput';
-import { updateRecipe, fetchIngredients } from '../db';
-import { getValidUnitsForIngredient } from '../utils/unitConverter';
+import { updateRecipe } from '../db';
 
 interface EditRecipeModalProps {
   recipe: Recipe | null;
@@ -37,11 +36,6 @@ export const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
 
   const [ingredients, setIngredients] = useState<RecipeIngredient[]>([]);
   const [instructions, setInstructions] = useState<string[]>([]);
-  const [allIngredients, setAllIngredients] = useState<Ingredient[]>([]);
-
-  useEffect(() => {
-    fetchIngredients().then(setAllIngredients);
-  }, []);
 
   useEffect(() => {
     if (recipe) {
@@ -152,8 +146,8 @@ export const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-stone-900/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden sm:overflow-y-auto">
-      <div className="bg-white rounded-t-[32px] rounded-b-none sm:rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-stone-200 overflow-hidden relative animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[100] bg-stone-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-stone-200 overflow-hidden relative">
         {/* Header */}
         <div className="p-5 sm:p-6 border-b border-stone-100 flex items-center justify-between shrink-0 bg-stone-50/50">
           <div className="flex items-center gap-3">
@@ -472,7 +466,7 @@ export const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
               {/* Live Image Preview */}
               {image && (
                 <div className="relative w-full h-40 rounded-2xl overflow-hidden border border-stone-200 bg-stone-100 mt-2">
-                  <img loading="lazy" decoding="async" fetchpriority="low" src={image} alt="پیش‌نمایش عکس" className="w-full h-full object-cover" />
+                  <img src={image} alt="پیش‌نمایش عکس" className="w-full h-full object-cover" />
                   <button
                     type="button"
                     onClick={() => setImage('')}
@@ -543,19 +537,17 @@ export const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
                     }}
                     className="w-20 p-2 bg-stone-50 border border-stone-200 rounded-xl text-center font-bold focus:bg-white focus:outline-none"
                   />
-                  <select
+                  <input
+                    type="text"
+                    placeholder="واحد"
                     value={ing.unit}
                     onChange={e => {
                       const updated = [...ingredients];
                       updated[idx].unit = e.target.value;
                       setIngredients(updated);
                     }}
-                    className="w-28 p-2 bg-stone-50 border border-stone-200 rounded-xl text-center font-medium text-xs focus:bg-white focus:outline-none"
-                  >
-                    {getValidUnitsForIngredient(ing.name, allIngredients).map(u => (
-                      <option key={u} value={u}>{u}</option>
-                    ))}
-                  </select>
+                    className="w-20 p-2 bg-stone-50 border border-stone-200 rounded-xl text-center focus:bg-white focus:outline-none"
+                  />
                   <select
                     value={ing.type || 'اصلی'}
                     onChange={e => {
@@ -681,10 +673,10 @@ export const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
               </p>
             )}
           </div>
-          </div>
+        </div>
 
-          {/* Sticky Fixed Submit Actions */}
-          <div className="p-4 bg-stone-50 border-t border-stone-200 flex items-center justify-end gap-3 shrink-0 z-10">
+        {/* Sticky Fixed Submit Actions */}
+        <div className="p-4 bg-stone-50 border-t border-stone-200 flex items-center justify-end gap-3 shrink-0 z-10">
             <button
               type="button"
               onClick={onClose}

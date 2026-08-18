@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { ScrollToTop } from './components/ScrollToTop';
+import { FloatingVoiceAssistant } from './components/FloatingVoiceAssistant';
 const LandingPage = React.lazy(() => import('./pages/Landing').then(module => ({ default: module.LandingPage })));
 const AuthLandingPage = React.lazy(() => import('./pages/AuthLandingPage').then(module => ({ default: module.AuthLandingPage })));
 const RecipesPage = React.lazy(() => import('./pages/Recipes').then(module => ({ default: module.RecipesPage })));
@@ -62,6 +63,7 @@ const AppContent: React.FC = () => {
                 </Routes></Suspense>
               </main>
 
+              <FloatingVoiceAssistant />
               <MobileBottomNav />
 
               <footer className="bg-white border-t border-stone-200/80 py-6 mt-12 hidden md:block">

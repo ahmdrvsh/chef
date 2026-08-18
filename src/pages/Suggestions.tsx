@@ -473,7 +473,7 @@ export const SuggestionsPage: React.FC = () => {
         computedItems.push({
           id: 'shop_' + Date.now() + Math.random().toString(36).substring(2, 6),
           name,
-          quantity: roundedAmount,
+          quantity: `${roundedAmount} ${data.unit}`,
           unit: data.unit,
           category: data.category,
           isBought: true,
@@ -488,7 +488,7 @@ export const SuggestionsPage: React.FC = () => {
         computedItems.push({
           id: 'shop_' + Date.now() + Math.random().toString(36).substring(2, 6),
           name,
-          quantity: deficit,
+          quantity: `${deficit} ${data.unit}`,
           unit: data.unit,
           category: data.category,
           isBought: false,
@@ -500,7 +500,7 @@ export const SuggestionsPage: React.FC = () => {
         computedItems.push({
           id: 'shop_' + Date.now() + Math.random().toString(36).substring(2, 6),
           name,
-          quantity: roundedAmount,
+          quantity: `${roundedAmount} ${data.unit}`,
           unit: data.unit,
           category: data.category,
           isBought: false,
@@ -907,7 +907,7 @@ export const SuggestionsPage: React.FC = () => {
                             <div className="flex items-center justify-between gap-2.5">
                               {/* Recipe Thumbnail & Title & Inline Servings Counter */}
                               <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                                <ImageWithFallback loading="lazy" decoding="async" fetchpriority="low"
+                                <ImageWithFallback
                                   src={recipe.image}
                                   alt={recipe.title}
                                   className="w-12 h-12 rounded-xl object-cover shrink-0 border border-stone-200 cursor-pointer"
@@ -1017,7 +1017,7 @@ export const SuggestionsPage: React.FC = () => {
 
       {/* ================= 4. CLEAR CONFIRMATION MODAL ================= */}
       {showClearConfirmModal && (
-        <div className="fixed inset-0 z-[70] bg-stone-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 pb-24 overflow-hidden sm:overflow-y-auto">
+        <div className="fixed inset-0 z-[70] bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-3 pb-24 sm:p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-stone-200 space-y-5 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center gap-3 text-rose-600">
               <div className="w-12 h-12 rounded-2xl bg-rose-100 flex items-center justify-center shrink-0">
@@ -1058,8 +1058,8 @@ export const SuggestionsPage: React.FC = () => {
 
       {/* ================= 5. RECIPE SELECTION MODAL (چند گزینه‌ای) ================= */}
       {selectingMeal && (
-        <div className="fixed inset-0 z-[70] bg-stone-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 pb-24 overflow-hidden sm:overflow-y-auto">
-          <div className="bg-white rounded-t-[24px] rounded-b-none sm:rounded-2xl sm:rounded-3xl max-w-3xl w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden border border-stone-200  relative animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[70] bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-2.5 pb-24 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl sm:rounded-3xl max-w-3xl w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden border border-stone-200 animate-in fade-in zoom-in-95 duration-200 relative">
             
             {/* Minimal Modal Header (Orange banner hidden on mobile, close button top-left) */}
             <div className="p-3 sm:p-5 bg-stone-100 sm:bg-gradient-to-r sm:from-amber-500 sm:to-orange-500 text-stone-800 sm:text-white flex items-center justify-between border-b sm:border-0 border-stone-200">
@@ -1288,7 +1288,7 @@ export const SuggestionsPage: React.FC = () => {
                         </div>
 
                         <div className="flex items-start gap-2 min-w-0">
-                          <ImageWithFallback loading="lazy" decoding="async" fetchpriority="low"
+                          <ImageWithFallback
                             src={recipe.image}
                             alt={recipe.title}
                             className="w-10 h-10 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl object-cover shrink-0 border border-stone-200"
@@ -1360,10 +1360,10 @@ export const SuggestionsPage: React.FC = () => {
 
       {/* ================= 6. QUICK RECIPE PREVIEW MODAL ================= */}
       {previewRecipe && (
-        <div className="fixed inset-0 z-[70] bg-stone-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 pb-24 overflow-hidden sm:overflow-y-auto">
-          <div className="bg-white rounded-t-[32px] rounded-b-none sm:rounded-3xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden border border-stone-200  animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[70] bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-3 pb-24 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden border border-stone-200 animate-in fade-in zoom-in-95 duration-200">
             <div className="relative h-48 sm:h-56">
-              <ImageWithFallback loading="lazy" decoding="async" fetchpriority="low"
+              <ImageWithFallback
                 src={previewRecipe.image}
                 alt={previewRecipe.title}
                 className="w-full h-full object-cover"

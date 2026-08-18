@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
-  <defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fff1f2"/><stop offset="100%" stop-color="#ffe4e6"/></linearGradient></defs>
-  <rect width="100%" height="100%" fill="url(#bg)"/>
-  <circle cx="200" cy="150" r="80" fill="#f43f5e" opacity="0.15"/>
-  <path d="M160 180 L200 110 L240 180 Z" fill="#e11d48"/>
-  <circle cx="200" cy="100" r="12" fill="#be123c"/>
-  <text x="200" y="240" font-family="Tahoma, sans-serif" font-size="20" font-weight="bold" fill="#881337" text-anchor="middle">دسر و شیرینی</text>
-</svg>
