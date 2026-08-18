@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: sofreh_app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - JWT_SECRET=sofreh_secure_jwt_secret_key_2026
+      - DATABASE_URL=postgresql://postgres:postgres_password@postgres:5432/sofreh_db
+      - REDIS_URL=redis://redis:6379
+      - S3_ENDPOINT=http://minio:9000
+      - S3_ACCESS_KEY_ID=minioadmin
+      - S3_SECRET_ACCESS_KEY=minioadmin
+      - S3_BUCKET_NAME=sofreh-images
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    networks:
+      - sofreh-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: sofreh_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_password
+      POSTGRES_DB: sofreh_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - sofreh-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: sofreh_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - sofreh-net
+
+  minio:
+    image: minio/minio:latest
+    container_name: sofreh_minio
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - miniodata:/data
+    networks:
+      - sofreh-net
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
+
+networks:
+  sofreh-net:
+    driver: bridge

@@ -1,0 +1,6 @@
+{
+  "name": "سفره",
+  "description": "سامانه هوشمند برنامه‌ریزی غذا، پیشنهاد بر اساس محتویات یخچال و لیست خرید هوشمند",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
